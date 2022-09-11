@@ -24,7 +24,7 @@ public class AlbumBilancio implements Comparable<AlbumBilancio>{
 
 	@Override
 	public int compareTo(AlbumBilancio o) {
-		return o.bilancio.compareTo(bilancio);
+		return (o.bilancio.compareTo(bilancio));
 	}
 
 	@Override

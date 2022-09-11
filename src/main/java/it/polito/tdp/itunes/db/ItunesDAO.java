@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Artist;
 import it.polito.tdp.itunes.model.Genre;
@@ -16,7 +18,7 @@ import it.polito.tdp.itunes.model.Track;
 
 public class ItunesDAO {
 	
-	public List<Album> getAllAlbums(){
+	/*public List<Album> getAllAlbums(){
 		final String sql = "SELECT * FROM Album";
 		List<Album> result = new LinkedList<>();
 		
@@ -34,6 +36,28 @@ public class ItunesDAO {
 			throw new RuntimeException("SQL Error");
 		}
 		return result;
+	}*/
+	
+	public void getAllAlbums(Map<Integer, Album>idMap){
+		final String sql = "SELECT * FROM Album";
+		List<Album> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				if(!idMap.containsKey(res.getInt("AlbumId"))) {
+					Album a=new Album(res.getInt("AlbumId"), res.getString("Title"), -1);
+					idMap.put(a.getAlbumId(), a);
+				}
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
 	}
 	
 	public List<Artist> getAllArtists(){
@@ -135,6 +159,37 @@ public class ItunesDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
+	public List<Album> getVertici(double prezzo, Map<Integer,Album> idMap) {
+		String sql = "SELECT SUM(t.UnitPrice) as p "
+				+ "FROM track t "
+				+ "WHERE t.AlbumId= ?";
+				
+		List<Album> result = new ArrayList<>();
+		for(Album a : idMap.values()) {
+			try {
+				Connection conn = DBConnect.getConnection();
+				PreparedStatement st = conn.prepareStatement(sql);
+				st.setInt(1, a.getAlbumId());
+				ResultSet res = st.executeQuery();
+				
+				while(res.next()) {
+					double p =res.getDouble("p");
+					if(p>prezzo) {
+						a.setPrezzo(p);
+						result.add(a);
+					}
+				}
+				
+				conn.close();
+				
+			} catch (SQLException e) {
+				e.printStackTrace();
+				throw new RuntimeException("SQL Error");
+			}
 		}
 		return result;
 	}
